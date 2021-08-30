@@ -19,7 +19,10 @@ INSTALLED_APPS = [
     'qsessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Apps
     'accounts',
+    'core',
 ]
 
 MIDDLEWARE = [
@@ -205,3 +208,5 @@ LOGGING = {
         },
     },
 }
+
+SANDBOX_DOCKER_IMAGE = 'replsandbox:latest'
