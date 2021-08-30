@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'qsessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts',
 ]
 
 MIDDLEWARE = [
