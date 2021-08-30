@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  redis:
+    image: "redis:latest"
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: "nginx:1.21.1-alpine"
+    restart: always
+    volumes:
+      - static_volume:/usr/src/app/.static
+      - logs_nginx:/var/log/nginx
+      - certs:/var/certs
+      - ./conf/nginx.conf:/etc/nginx/conf.d/app.conf
+
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - server
+
+  server:
+    build: ./
+    command: bash -c "./release.sh && daphne -b 0.0.0.0 -p 8000 app.server:application"
+    env_file: .env
+    volumes:
+      - static_volume:/usr/src/app/.static
+      - logs_app:/var/log/django
+      - /var/run/docker.sock:/var/run/docker.sock  # Bind docker socket into image
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+  static_volume:
+  certs:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /var/certs
+
+  logs_app:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /var/log/repl/app
+
+  logs_nginx:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /var/log/repl/nginx
