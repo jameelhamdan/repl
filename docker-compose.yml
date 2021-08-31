@@ -23,7 +23,7 @@ services:
       - server
 
   server:
-    build: ./
+    build: ./server/.
     command: bash -c "./release.sh && daphne -b 0.0.0.0 -p 8000 app.server:application"
     env_file: .env
     volumes:
