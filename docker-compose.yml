@@ -1,30 +1,38 @@
 version: '3'
 
+networks:
+  repl-network:
+    external: true
+  internal-network:
+
 services:
   redis:
     image: "redis:latest"
     restart: always
     volumes:
       - redis_data:/data
+    networks:
+      - internal-network
 
-  nginx:
-    image: "nginx:1.21.1-alpine"
+  caddy:
+    image: "caddy:2.4.3-alpine"
     restart: always
     volumes:
       - static_volume:/usr/src/app/.static
-      - logs_nginx:/var/log/nginx
-      - certs:/var/certs
-      - ./conf/nginx.conf:/etc/nginx/conf.d/app.conf
-
+      - logs_proxy:/var/log/caddy
+      - ./conf/Caddyfile:/etc/caddy/Caddyfile
     ports:
       - 80:80
       - 443:443
     depends_on:
       - server
+    networks:
+      - repl-network
+      - internal-network
 
   server:
     build: ./server/.
-    command: bash -c "./release.sh && daphne -b 0.0.0.0 -p 8000 app.server:application"
+    command: bash -c "./run.sh && daphne -b 0.0.0.0 -p 8000 app.server:application"
     env_file: .env
     volumes:
       - static_volume:/usr/src/app/.static
@@ -32,16 +40,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Bind docker socket into image
     depends_on:
       - redis
+    networks:
+      - internal-network
 
 volumes:
   redis_data:
   static_volume:
-  certs:
-    driver: local
-    driver_opts:
-      o: bind
-      type: none
-      device: /var/certs
 
   logs_app:
     driver: local
@@ -50,9 +54,9 @@ volumes:
       type: none
       device: /var/log/repl/app
 
-  logs_nginx:
+  logs_proxy:
     driver: local
     driver_opts:
       o: bind
       type: none
-      device: /var/log/repl/nginx
+      device: /var/log/repl/proxy

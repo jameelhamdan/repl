@@ -15,7 +15,7 @@ class Language(Enum):
     @classmethod
     def command(cls) -> List[str]:
         return {
-            cls.PYTHON: ['python'],
+            cls.PYTHON: ['python3'],
             cls.NODE: ['node', '-i'],
         }[cls.value]
 

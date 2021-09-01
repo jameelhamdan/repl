@@ -4,4 +4,4 @@ COPY requirements.txt /
 RUN pip install -U pip && pip install -r requirements.txt
 WORKDIR /usr/src/app
 COPY . .
-RUN chmod -R +x release.sh
+RUN chmod -R +x run.sh

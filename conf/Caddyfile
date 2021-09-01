@@ -1,0 +1,11 @@
+localhost
+{
+    root /usr/src/app
+    proxy / server:8000 {
+        transparent
+        except /.static
+    }
+    proxy /ws/{uuid}/ http://sandbox-{uuid}:8000 {
+        websocket
+    }
+}

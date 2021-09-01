@@ -209,4 +209,5 @@ LOGGING = {
     },
 }
 
-SANDBOX_DOCKER_IMAGE = 'replsandbox:latest'
+DOCKER_SANDBOX_IMAGE = 'repl-sandbox:latest'
+DOCKER_NETWORK = 'repl-network'
