@@ -1,10 +1,10 @@
 """
 Run code with language specific commands
 """
-import subprocess
-import sys
-import threading
+import asyncio
+import time
 from enum import Enum
+from queue import Queue
 from typing import List
 
 
@@ -21,46 +21,78 @@ class Language(Enum):
 
 
 class Repl:
-    # TODO: Fix and Hook this to websocket
+    """
+    Class to wrap subprocess read write communication
+    """
 
-    @staticmethod
-    def timed_user_input(timer, wait, buffer_in, buffer_out, buffer_target):
-        # we'll be using a separate thread and a timed event to request the user input
+    cycle_speed = 0.01  # while loop speed lower is faster
 
+    def __init__(self, command: List[str]):
+        self.command = command
+
+        # Initialize Input and Signals Queues
+        self.input_queue = Queue()
+        self.signal_queue = Queue()
+
+        # Run Subprocess
+        self.task = asyncio.create_task(self.run(self.command))
+
+    async def _read_stream(self, stream, callback):
         while True:
-            timer.wait(wait)
-            if not timer.is_set():
-                print("> ", end="", file=buffer_out, flush=True)
-                print(buffer_in.readline(), file=buffer_target, flush=True)
-            timer.clear()
+            line = await stream.readline()
+            if not line:
+                break
+            callback(line)
+            time.sleep(self.cycle_speed)
 
-    def __init__(self, language: Language):
-        self.stdin = sys.stdin
-        self.stdout = sys.stdout
-        self.language = language
-        self.proc = subprocess.Popen(
-            self.language.command(),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            universal_newlines=True
+    async def _write_stream(self, stream):
+        while True:
+            if not self.input_queue.empty():
+                line = self.input_queue.get()
+                stream.write(line)
+
+            time.sleep(self.cycle_speed)
+
+    async def _send_signal_stream(self):
+        while True:
+            if not self.signal_queue.empty():
+                signal = self.signal_queue.get()
+                self.proc.send_signal(signal)
+
+            time.sleep(self.cycle_speed)
+
+    async def run(self, command):
+        self.proc = await asyncio.create_subprocess_exec(
+            *command,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
 
-        self.timer = threading.Event()
-        self.input_thread = threading.Thread(
-            target=self.timed_user_input,
-            args=(self.timer, 1.0, self.stdin, self.stdout, self.proc.stdin)
-        )
-        self.input_thread.daemon = True
-        self.input_thread.start()
-        # now we'll read the `rasa` STDOUT line by line, forward it to output_buffer and reset
-        # the timer each time a new line is encountered
-        for line in self.proc.stdout:
-            self.stdout.write(line)  # forward the STDOUT line
-            self.stdout.flush()  # flush the output buffer
-            self.timer.set()  # reset the timer
+        await asyncio.wait([
+            self._send_signal_stream(),
+            self._write_stream(self.proc.stdin),
+            self._read_stream(self.proc.stdout, self.stdout_callback),
+            self._read_stream(self.proc.stderr, self.stderr_callback)
+        ])
+
+        return await self.proc.wait()
+
+    def stdout_callback(self, msg):
+        print('STDDOUT: %s' % msg)
+
+    def stderr_callback(self, msg):
+        print('STDERR: %s' % msg)
 
     def kill(self):
+        self.task.cancel()
         self.proc.kill()
 
     def __del__(self):
         self.kill()
+
+
+class LanguageRepl(Repl):
+    def __init__(self, language: Language):
+        self.language = language
+        super().__init__(language.command())
