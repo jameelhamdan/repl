@@ -14,13 +14,24 @@ services:
     networks:
       - internal-network
 
-  caddy:
-    image: "caddy:2.4.3-alpine"
+  postgres:
+    image: "postgres:13.4"
+    restart: always
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal-network
+
+  nginx:
+    image: "nginx:1.21.1-alpine"
     restart: always
     volumes:
       - static_volume:/usr/src/app/.static
-      - logs_proxy:/var/log/caddy
-      - ./conf/Caddyfile:/etc/caddy/Caddyfile
+      - logs_proxy:/var/log/nginx
+      - certs:/var/certs
+      - ./conf/nginx.conf:/etc/nginx/conf.d/app.conf
+
     ports:
       - 80:80
       - 443:443
@@ -45,7 +56,14 @@ services:
 
 volumes:
   redis_data:
+  postgres_data:
   static_volume:
+  certs:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /var/certs
 
   logs_app:
     driver: local
