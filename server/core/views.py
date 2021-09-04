@@ -18,5 +18,5 @@ class DetailView(generic.DetailView):
 app_name = 'core'
 urlpatterns = [
     path('', IndexView.as_view(), name='index'),
-    path('<str:pk>/', DetailView.as_view(), name='detail'),
+    path('run/<str:pk>/', DetailView.as_view(), name='detail'),
 ]

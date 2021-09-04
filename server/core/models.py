@@ -42,5 +42,5 @@ class Instance(LifecycleModelMixin, models.Model):
         # Delete instance from docker
         try:
             docker.Client.remove_container(self.container_name)
-        except docker.exceptions.NotFound:
+        except docker.Exceptions.NotFound:
             pass

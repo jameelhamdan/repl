@@ -6,7 +6,7 @@ from tornado.web import Application
 from src.ws import WsHandler
 
 app = Application([
-    (r'/', WsHandler),
+    (r'(.*)', WsHandler),
 ])
 
 parser = argparse.ArgumentParser(description='Run the Websocket service.')

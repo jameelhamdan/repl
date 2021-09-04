@@ -2,8 +2,6 @@ import json
 from tornado import websocket
 from .repl import LanguageRepl, Language
 
-cl = []
-
 
 class WsLanguageRepl(LanguageRepl):
     def __init__(self, write_message_callback):
@@ -45,11 +43,3 @@ class WsHandler(websocket.WebSocketHandler):
 
         if data['type'] == 'SIGNAL':
             self.repl.signal_queue.put(data['signal'])
-
-    def open(self):
-        if self not in cl:
-            cl.append(self)
-
-    def on_close(self):
-        if self in cl:
-            cl.remove(self)

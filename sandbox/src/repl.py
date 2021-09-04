@@ -12,12 +12,11 @@ class Language(Enum):
     PYTHON = 'python'
     NODE = 'node'
 
-    @classmethod
-    def command(cls) -> List[str]:
+    def command(self) -> List[str]:
         return {
-            cls.PYTHON: ['python3'],
-            cls.NODE: ['node', '-i'],
-        }[cls.value]
+            self.PYTHON: ['python3'],
+            self.NODE: ['node', '-i'],
+        }[self]
 
 
 class Repl:
@@ -35,6 +34,7 @@ class Repl:
         self.signal_queue = Queue()
 
         # Run Subprocess
+        self.proc = None
         self.task = asyncio.create_task(self.run(self.command))
 
     async def _read_stream(self, stream, callback):
@@ -87,9 +87,6 @@ class Repl:
     def kill(self):
         self.task.cancel()
         self.proc.kill()
-
-    def __del__(self):
-        self.kill()
 
 
 class LanguageRepl(Repl):
