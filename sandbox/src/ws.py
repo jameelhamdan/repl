@@ -1,22 +1,26 @@
 import json
-from tornado import websocket
+from tornado import websocket, log
 from .repl import LanguageRepl, Language
+
+clients = []
 
 
 class WsLanguageRepl(LanguageRepl):
-    def __init__(self, write_message_callback):
+    def __init__(self, write_message_callback, language=Language.PYTHON):
+        super().__init__(language)
         self.write_message_callback = write_message_callback
-        super().__init__(language=Language.PYTHON)
+        self.language = language
+        log.gen_log.warning(f'INITIALIZE {self.language} REPL')
 
     def stdout_callback(self, msg):
-        print('WS STDDOUT: %s' % msg)
+        log.gen_log.warning('WS STDDOUT: %s' % msg)
         self.write_message_callback({
             'type': 'stdout',
             'data': msg,
         })
 
     def stderr_callback(self, msg):
-        print('WS STDERR: %s' % msg)
+        log.gen_log.warning('WS STDERR: %s' % msg)
         self.write_message_callback({
             'type': 'stderr',
             'data': msg,
@@ -36,6 +40,11 @@ class WsHandler(websocket.WebSocketHandler):
         try:
             data = json.loads(message)
         except json.JSONDecodeError:
+            log.gen_log.warning('ERROR: invalid_input')
+            self.write_message({
+                'type': 'error',
+                'data': 'invalid_request',
+            })
             return
 
         if data['type'] == 'INPUT':

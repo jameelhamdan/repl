@@ -3,6 +3,7 @@ import sys
 import argparse
 from tornado.ioloop import IOLoop
 from tornado.web import Application
+from tornado import log
 from src.ws import WsHandler
 
 app = Application([
@@ -20,8 +21,8 @@ parser.add_argument(
 if __name__ == '__main__':
     options = parser.parse_args(sys.argv[1:])
 
-    print(f'Running Server at http://{options.host}:{options.port}/')
-    print(f'Quit the server with CTRL-BREAK.')
+    log.gen_log.warning(f'Running Server at http://{options.host}:{options.port}/')
+    log.gen_log.warning(f'Quit the server with CTRL-BREAK.')
     app.listen(options.port, options.host)
 
     try:
