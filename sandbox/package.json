@@ -1,0 +1,19 @@
+{
+  "name": "sandbox",
+  "version": "0.0.1",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "set DEBUG=* & node server.js"
+  },
+  "author": "Jameel Hamdan <jameelhamdan99@yahoo.com>",
+  "dependencies": {
+    "node-pty": "^0.10.1",
+    "socket.io": "^4.2.0"
+  },
+  "devDependencies": {
+    "debug": "^4.3.2"
+  }
+}

@@ -10,6 +10,14 @@ class State(models.IntegerChoices):
     ACTIVE = 1, _('Active')
 
 
+class Terminal(models.TextChoices):
+    PYTHON = 'python', _('Python')
+    JAVASCRIPT = 'javascript', _('Javascript')
+    BASH = 'bash', _('Bash')
+    SHELL = 'shell', _('Shell')
+    CMD = 'cmd', _('CMD')
+
+
 class Instance(LifecycleModelMixin, models.Model):
     """
     Model for sandbox instances
@@ -18,6 +26,7 @@ class Instance(LifecycleModelMixin, models.Model):
     state = models.PositiveSmallIntegerField(choices=State.choices, default=State.PENDING)
     created_on = models.DateTimeField(auto_now_add=True, editable=False)
     updated_on = models.DateTimeField(auto_now=True, editable=False)
+    terminal_type = models.CharField(max_length=32, choices=Terminal.choices, default=Terminal.BASH)
 
     class Meta:
         default_permissions = []
@@ -26,19 +35,41 @@ class Instance(LifecycleModelMixin, models.Model):
         return self.container_name
 
     @property
-    def container_name(self):
+    def container_name(self) -> str:
+        """
+        Return Docker container name
+        :return:
+        """
         return f'sandbox-{self.id}'
+
+    @property
+    def docker_command(self) -> str:
+        return self.terminal_type.value
+
+    @property
+    def socket_url(self) -> str:
+        """
+        This will return the local url socket for this instance
+        :return:
+        """
+        return f'/ws/{self.container_name}'
 
     @hook(AFTER_CREATE)
     def after_create(self):
-        # Create instance on docker
+        """
+        Create instance container on docker and activate instance
+        """
+
         # TODO: Add to queue
-        docker.Client.create_container(self.container_name)
+        docker.Client.create_container(self.container_name, self.docker_command)
         self.state = State.ACTIVE
         self.save()
 
     @hook(BEFORE_DELETE)
     def before_delete(self):
+        """
+        Try to remove instance container from docker
+        """
         # Delete instance from docker
         try:
             docker.Client.remove_container(self.container_name)

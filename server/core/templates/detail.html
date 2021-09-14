@@ -3,10 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ object }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.min.css"/>
 </head>
 <body>
 <h4>{{ object }}</h4>
-<p>Please wait...</p>
 
+<div id="terminal" style="width:100%; height:50vh;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xterm/3.14.5/xterm.min.js"></script>
+<script>
+    {
+        const container = document.getElementById('terminal');
+        const socket = io({path: '{{ object.socket_url }}', transports: ['websocket']});
+        const term = new Terminal();
+
+        term.setOption("theme", {
+            background: '#202B33',
+            foreground: '#F5F8FA',
+        });
+
+        const input = (data) => {
+            socket.emit('input', data);
+        }
+
+        const clear = () => {
+            term.clear();
+        }
+
+        const attachTo = container => {
+            term.open(container);
+            // Default text to display on terminal.
+            term.writeln("Terminal Connecting, Please wait...");
+
+            // This will propagate all event within terminal to websocket
+            term.on('key', (key, e) => input(key));
+        }
+
+        socket.on("stdout", data => {
+            term.write(data);
+        });
+
+        socket.on("reconnect", data => {
+            clear();
+        });
+
+        attachTo(container);
+    }
+</script>
 </body>
 </html>
