@@ -15,7 +15,7 @@
 <script>
     {
         const container = document.getElementById('terminal');
-        const socket = io({path: '{{ object.get_socket_url }}', transports: ['websocket']});
+        const socket = io({path: '{{ object.socket_url }}', transports: ['websocket']});
         const term = new Terminal();
 
         term.setOption("theme", {

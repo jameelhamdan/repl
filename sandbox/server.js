@@ -1,8 +1,7 @@
 import {Server} from "socket.io";
 import Repl from "./src/repl.js";
-import IConsoles from "./src/iconsole.js";
+import Terminals from "./src/terminal.js";
 
-// Config
 const port = 8000;
 
 const io = new Server(port, {
@@ -12,8 +11,17 @@ const io = new Server(port, {
     }
 });
 
+// Get Argument for which Terminal to run
+const arg = process.argv[2] || 'cmd';
+const terminal = Terminals[arg];
+
+if (!terminal) {
+    console.error(`Terminal with name "${arg}" undefined`);
+    process.exit(1);
+}
+
 // Global instance of Repl
-let _Repl = new Repl(IConsoles.Cmd, (data) => {
+let repl = new Repl(terminal, (data) => {
     io.emit('stdout', data);
 });
 
@@ -21,11 +29,10 @@ io.on("connection", (socket) => {
     console.log('Client Connected');
 
     // TODO: Send this in chunks instead of one message at a time
-    _Repl.messages.forEach(m => socket.emit('stdout', m));
+    repl.messages.forEach(m => socket.emit('stdout', m));
 
-    socket.on('input', (msg) => {
-        _Repl.write(msg);
-    });
+    socket.on('input', (msg) => repl.write(msg));
+
     socket.on('disconnect', () => {
         console.log('Client disconnected');
     });

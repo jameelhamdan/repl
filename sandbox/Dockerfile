@@ -20,4 +20,4 @@ RUN npm install
 USER runner
 WORKDIR /home/runner/
 
-CMD node /ws/server.js
+ENTRYPOINT ['node', '/ws/server.js']

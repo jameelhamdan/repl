@@ -2,13 +2,13 @@ import {spawn} from "node-pty";
 
 
 class Repl {
-    constructor(_console, output_callback = null) {
-        this.console = _console;
+    constructor(terminal, output_callback = null) {
+        this.terminal = terminal;
 
-        this.proc = spawn(this.console.command, this.console.args, {
+        this.proc = spawn(this.terminal.command, this.terminal.args, {
             name: "xterm",
-            cwd: this.console.path,
-            env: this.console.env,
+            cwd: this.terminal.path,
+            env: this.terminal.env,
         });
         this.messages = [];
 
@@ -21,9 +21,11 @@ class Repl {
     write(data) {
         this.proc.write(data);
     }
+
     execute(data) {
         this.proc.write(data);
     }
+
     kill() {
         this.proc.removeAllListeners('data');
         this.proc.kill()
