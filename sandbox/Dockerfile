@@ -14,11 +14,10 @@ RUN apk del shadow
 COPY . /ws/.
 RUN chmod +x /ws/server.py
 
-# Install websocket python dependencies
-RUN pip install -r /ws/requirements.txt
-
+# Install websocket node dependencies
+RUN npm install
 
 USER runner
 WORKDIR /home/runner/
 
-CMD python3 /ws/server.py -H 0.0.0.0 -p 8000
+CMD node /ws/server.js

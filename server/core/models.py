@@ -29,6 +29,13 @@ class Instance(LifecycleModelMixin, models.Model):
     def container_name(self):
         return f'sandbox-{self.id}'
 
+    def get_socket_url(self):
+        """
+        This will return the local url socket for this instance
+        :return:
+        """
+        return f'/ws/{self.container_name}'
+
     @hook(AFTER_CREATE)
     def after_create(self):
         # Create instance on docker
