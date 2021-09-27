@@ -10,8 +10,9 @@
   },
   "author": "Jameel Hamdan <jameelhamdan99@yahoo.com>",
   "dependencies": {
+    "socket.io": "^4.2.0",
     "node-pty": "^0.10.1",
-    "socket.io": "^4.2.0"
+    "file-system-explorer": "^1.1.5"
   },
   "devDependencies": {
     "debug": "^4.3.2"
